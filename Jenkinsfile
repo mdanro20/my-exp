@@ -1,13 +1,42 @@
 pipeline {
-    agent any
-    stages {
-        stage('deploy') {
-            steps {
-              sh "aws configure set region $AWS_DEFAULT_REGION" 
-              sh "aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID"  
-              sh "aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-              sh "aws s3 cp build/ s3://my-exp-dan"
-            }
+  agent {
+    docker {
+     image 'node:6-alpine'
+     args '-p 3000:3000'
+    }
+  }
+  environment {
+    CI = 'true'
+    HOME = '.'
+    npm_config_cache = 'npm-cache'
+  }
+  stages {
+    stage('Install Packages') {
+      steps {
+        sh 'npm install'
+      }
+    }
+    stage('Test and Build') {
+      parallel {
+        stage('Run Tests') {
+          steps {
+            sh 'npm run test'
+          }
+        }
+        stage('Create Build Artifacts') {
+          steps {
+            sh 'npm run build'
+          }
+        }
+      }
+    }
+    stage('Production') {
+        steps {
+          withAWS(region:'YOUR_BUCKET_REGION',credentials:'CREDENTIALS_FROM_JENKINS_SETUP') {
+            s3Delete(bucket: 'YOUR_BUCKET_NAME', path:'**/*')
+            s3Upload(bucket: 'YOUR_BUCKET_NAME', workingDir:'build', includePathPattern:'**/*');
+          }
         }
     }
+  }
 }

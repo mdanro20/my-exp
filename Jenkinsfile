@@ -22,9 +22,9 @@ pipeline {
     }
     stage('Production') {
         steps {
-          withAWS(region:'YOUR_BUCKET_REGION',credentials:'CREDENTIALS_FROM_JENKINS_SETUP') {
-            s3Delete(bucket: 'YOUR_BUCKET_NAME', path:'**/*')
-            s3Upload(bucket: 'YOUR_BUCKET_NAME', workingDir:'build', includePathPattern:'**/*');
+          withAWS(region:'sa-east-1',credentials:'My-exp-job-id') {
+            s3Delete(bucket: 'my-exp-dan', path:'**/*')
+            s3Upload(bucket: 'my-exp-dan', workingDir:'build', includePathPattern:'**/*');
           }
         }
     }

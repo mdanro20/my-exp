@@ -11,18 +11,9 @@ pipeline {
         bat 'npm install'
       }
     }
-    stage('Test and Build') {
-      parallel {
-        stage('Run Tests') {
-          steps {
-            bat 'npm run test'
-          }
-        }
-        stage('Create Build Artifacts') {
-          steps {
-            bat 'npm run build'
-          }
-        }
+    stage('Build') {
+      steps {
+        bat 'npm run build'
       }
     }
     stage('Deployment') {

@@ -1,13 +1,40 @@
 pipeline {
-    agent any
-    stages {
-        stage('deploy') {
-            steps {
-              bat "aws configure set region $AWS_DEFAULT_REGION" 
-              bat "aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID"  
-              bat "aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-              bat "aws s3 sync public/ s3://my-exp-dan"
-            }
-        }
+  agent any
+    environment {
+      CI = 'true'
+      HOME = '.'
+      npm_config_cache = 'npm-cache'
     }
+  stages {
+    stage('Install Packages') {
+      steps {
+        bat 'npm install'
+      }
+    }
+    stage('Test and Build') {
+      parallel {
+        stage('Run Tests') {
+          steps {
+            bat 'npm run test'
+          }
+        }
+        stage('Create Build Artifacts') {
+          steps {
+            bat 'npm run build'
+          }
+        }
+      }
+    }
+    stage('Deployment') {
+      when {
+        branch 'master'
+      }
+      steps {
+          withAWS(region:'sa-east-1',credentials:'AWS-S3-Cred') {
+          s3Delete(bucket: 'my-exp-dan', path:'**/*')
+          s3Upload(bucket: 'my-exp-dan', workingDir:'build', includePathPattern:'**/*');
+        }
+      }
+    }
+ }
 }

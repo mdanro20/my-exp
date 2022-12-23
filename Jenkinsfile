@@ -1,22 +1,13 @@
 pipeline {
-  agent any
-  stages {
-      stage('Build') {
-          steps {
-              bat 'echo "Hello World"'
-              bat '''
-                  echo "Multiline shell steps works too"
-                  ls -lah
-              '''
-          }
-      }      
-      stage('Upload to AWS') {
-          steps {
-              withAWS(region:'sa-east-1',credentials:'AWS-S3-Cred') {
-              bat 'echo "Uploading content with AWS creds"'
-                  s3Upload(pathStyleAccessEnabled: true, payloadSigningEnabled: true, file:'public', bucket:'my-exp-dan')
-              }
-          }
-      }
-  }
+    agent any
+    stages {
+        stage('deploy') {
+            steps {
+              bat "aws configure set region $AWS_DEFAULT_REGION" 
+              bat "aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID"  
+              bat "aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+              bat "aws s3 sync public/ s3://my-exp-dan"
+            }
+        }
+    }
 }

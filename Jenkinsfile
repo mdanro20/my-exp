@@ -11,3 +11,8 @@ pipeline {
         }
     }
 }
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - deploy

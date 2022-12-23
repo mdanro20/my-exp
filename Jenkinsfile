@@ -1,32 +1,15 @@
 pipeline {
-  agent any
-  stages {
-    stage('Install Packages') {
-      steps {
-        sh 'npm install'
-      }
-    }
-    stage('Test and Build') {
-      parallel {
-        stage('Run Tests') {
-          steps {
-            sh 'npm run test'
-          }
-        }
-        stage('Create Build Artifacts') {
-          steps {
-            sh 'npm run build'
-          }
-        }
-      }
-    }
-    stage('Production') {
-        steps {
-          withAWS(region:'sa-east-1',credentials:'My-exp-job-id') {
-            s3Delete(bucket: 'my-exp-dan', path:'**/*')
-            s3Upload(bucket: 'my-exp-dan', workingDir:'build', includePathPattern:'**/*');
-          }
+    agent any
+pipeline {
+    agent any
+    stages {
+        stage('deploy') {
+            steps {
+              sh "aws configure set region $AWS_DEFAULT_REGION" 
+              sh "aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID"  
+              sh "aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+              sh "aws s3 sync build/ s3://my-exp-dan"
+            }
         }
     }
-  }
 }
